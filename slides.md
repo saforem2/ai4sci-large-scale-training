@@ -104,7 +104,8 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 
 <grid drop="60 0" drag="40 100">
 
-![model-parallel](https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg)
+<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" style="max-width:80%;" align="right">
+<!-- .element align="stretch" -->
 </grid>
 
 ---
@@ -151,7 +152,7 @@ flowchart LR
 
 <!-- .slide template="[[template]]" bg="#1C1C1C" -->
 
-<grid drop="0 0" drag="50 100" style="text-align:left!important;">
+<grid drop="0 0" drag="55 100" style="text-align:left!important;">
 
 # Data Parallel Training
 
@@ -164,7 +165,7 @@ flowchart LR
 
 <grid drop="60 0" drag="40 100">
 
-![](https://saforem2.github.io/distributed-training-slides/assets/data-parallel.svg) <!-- .element style="width:80%;" align="left" -->
+<img src="https://saforem2.github.io/distributed-training-slides/assets/data-parallel.svg" style="max-width:66%;"> <!-- .element align="stretch" -->
 </grid>
 
 
