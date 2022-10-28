@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>Why Distributed Training?</title>
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/black.css" id="theme" />
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+	<link rel="stylesheet" href="css/layout.css" />
+	<link rel="stylesheet" href="plugin/customcontrols/style.css">
+
+	<link rel="stylesheet" href="plugin/reveal-pointer/pointer.css" />
+
+    <link rel="stylesheet" href="./custom.css" />
+
+    <script defer src="dist/fontawesome/all.min.js"></script>
+
+	<script type="text/javascript">
+		var forgetPop = true;
+		function onPopState(event) {
+			if(forgetPop){
+				forgetPop = false;
+			} else {
+				parent.postMessage(event.target.location.href, "app://obsidian.md");
+			}
+        }
+		window.onpopstate = onPopState;
+		window.onmessage = event => {
+			if(event.data == "reload"){
+				window.document.location.reload();
+			}
+			forgetPop = true;
+		}
+
+		function fitElements(){
+			const itemsToFit = document.getElementsByClassName('fitText');
+			for (const item in itemsToFit) {
+				if (Object.hasOwnProperty.call(itemsToFit, item)) {
+					var element = itemsToFit[item];
+					fitElement(element,1, 1000);
+					element.classList.remove('fitText');
+				}
+			}
+		}
+
+		function fitElement(element, start, end){
+
+			let size = (end + start) / 2;
+			element.style.fontSize = `${size}px`;
+
+			if(Math.abs(start - end) < 1){
+				while(element.scrollHeight > element.offsetHeight){
+					size--;
+					element.style.fontSize = `${size}px`;
+				}
+				return;
+			}
+
+			if(element.scrollHeight > element.offsetHeight){
+				fitElement(element, start, size);
+			} else {
+				fitElement(element, size, end);
+			}		
+		}
+
+
+		document.onreadystatechange = () => {
+			fitElements();
+			if (document.readyState === 'complete') {
+				if (window.location.href.indexOf("?export") != -1){
+					parent.postMessage(event.target.location.href, "app://obsidian.md");
+				}
+				if (window.location.href.indexOf("print-pdf") != -1){
+					let stateCheck = setInterval(() => {
+						clearInterval(stateCheck);
+						window.print();
+					}, 250);
+				}
+			}
+	};
+
+
+        </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+<div class="" style="background-color: #282828; border-radius: 8px; position: absolute; left: 15%; top: 37.5%; height: 25%; width: 70%; display: flex; flex-direction: column; align-items: center; justify-content: center" align="center">
+
+
+<span style="border-bottom:3px solid var(--r-header-accent); font-weight:800; font-size:1.75em; margin-bottom:0px;">Large Scale Training</span>
+
+<span style="font-size:0.8em; line-height:0.8em; margin-bottom:0px; margin-top:0px;">[<i class="fab fa-github fa-1x" alt="`fas:Github`"></i> argonne-lcf / ai-science-training-series](https://github.com/argonne-lcf/ai-science-training-series)</span> <!-- .element: style="color: #00CCFF!important; font-family: 'JuliaMono', monospace" -->
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 70%; height: 10%; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end" align="left">
+
+
+<a href="https://www.samforeman.me"><i class="fas fa-home fa-1x" alt="`fas:Home`" ></i></a> Sam Foreman <!-- .element: style="color: #505050" -->
+
+<span style="font-size:0.9em; color:#505050; padding:0px; margin:0px; text-align:center!important;">2022-11-01</span>
+</div>
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1C1C1C" -->
+
+# Why Distributed Training?
+
+- Large batches may not fit in GPU memory
+- Splitting data across workers --> larger batch size
+- Smooth loss landscape
+- Improved gradient estimators
+- Less iterations needed for same number of epochs
+	- May need to train for more epochs if another change is not made
+	- e.g. scaling learning rate
+- See [Large Batch Training of Convolutional Networks](https://arxiv.org/abs/1708.03888)
+
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" data-background-color="#1C1C1C" template="template" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<img src="https://miro.medium.com/max/4800/1*h93R4BUIdUO4Mtq_tsYPPg.jpeg" alt="" style="width: 90%; display: flex; flex-direction: column; align-items: center; justify-content: center; object-fit: fill; align-self: center">
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Recent Progress
+
+|              Year               |                  Author                  |            Batch Size            |                  Processor                  |           DL Library            |                Time                |                         Accuracy |
+|:-------------------------------:|:----------------------------------------:|:--------------------------------:|:-------------------------------------------:|:-------------------------------:|:----------------------------------:| --------------------------------:|
+| <span id="blue">2016</span> |   <span id="blue">He et al. [1]</span>   |    <span id="blue">256</span>    |    <span id="blue">Tesla P100 x8</span>     |  <span id="blue">Caffe</span>   |              <span id="blue">29 Hrs</span>               |                            <span id="blue">75.3%</span> |
+|                                 |             Goyal et al. [2]             |               8192               |                 Tesla P100                  |             Caffe 2             |               1 hour               |                            76.3% |
+|                                 |             Smith et al. [3]             |         8192 ->  16,384          |                full TPU pod                 |           TensorFlow            |              30 mins               |                            76.1% |
+|                                 |             Akiba et al. [4]             |              32,768              |              Tesla P100 x1024               |             Chainer             |              15 mins               |                            74.9% |
+|                                 |              Jia et al. [5]              |              65,536              |              Tesla P40  x2048               |           TensorFLow            |              6.6 mins              |                            75.8% |
+|                                 |             Ying et al. [6]              |              65,536              |                TPU v3 x1024                 |           TensorFlow            |              1.8 mins              |                            75.2% |
+|                                 |            Mikami et al. [7]             |              55,296              |              Tesla V100 x3456               |               NNL               |              2.0 mins              |                           75.29% |
+| <span id="red">**2019**</span>  | <span id="red">**Yamazaki et al**</span> | <span id="red">**81,920**</span> | <span id="red">**Tesla V100 x 2048**</span> | <span id="red">**MXNet**</span> | <span id="red">**1.2 mins**</span> | <span id="red">**75.08%**</span> |
+<!-- .element: style="font-size: 0.8em" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1C1C1C" -->
+
+# Model Parallel Training <!-- .element: style="font-size: 2.0em" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1C1C1C" -->
+
+<div class="" style="position: absolute; left: 0%; top: 0%; height: 100%; width: 55%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+# Model Parallel Training
+
+- Split up network over multiple workers
+
+  - Each receives disjoint subset
+  - All communication associated with subsets are distributed
+
+- Communication whenever dataflow between two subsets
+
+- Typically **more complicated** to implement than data parallel training
+
+- Suitable when the model is too large to fit onto a single device (CPU / GPU)
+</div>
+
+<div class="" style="position: absolute; left: 60%; top: 0%; height: 100%; width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" alt="model-parallel" style="object-fit: scale-down">
+
+</div>
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Model Parallel Training
+
+`$$y = w_0 * x_0 + w_1 * x_1 + w_2 * x_2$$`
+
+1. Compute `$y_{0} = w_{0} * x_{0}$` and send to --> `GPU1`
+2. Compute `$y_{1} = y_{0} + w_{1} * x_{1}$` and send to --> `GPU2`
+3. Compute `$y = y_{1} * w_{2} * x_{2}$` ✅
+
+
+
+<div class="mermaid">
+flowchart LR
+  subgraph G0["GPU0"]
+    direction LR
+    a["w0"]
+  end
+  subgraph G1["GPU1"]
+    direction LR
+    b["w1"]
+  end
+  subgraph G2["GPU2"]
+    direction LR
+    c["w2"]
+  end
+  G1 & G0 <--> G2
+  G0 <--> G1
+  x["x0, x1, x2"] --> G0
+
+</div>
+
+<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1C1C1C" -->
+
+# Data Parallel Training <!-- .element: style="font-size: 2.0em" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1C1C1C" -->
+
+<div class="" style="text-align: left!important; position: absolute; left: 0%; top: 0%; height: 100%; width: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+# Data Parallel Training
+
+- Each worker has identical copy of complete model
+- Each Worker computes the corresponding loss and gradients w.r.t **local** data
+- Before updating parameters, loss and gradients averaged across workers
+- Typically easier / simpler to implement
+
+</div>
+
+<div class="" style="position: absolute; left: 60%; top: 0%; height: 100%; width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
+
+
+<img src="https://saforem2.github.io/distributed-training-slides/assets/data-parallel.svg" alt="" style="width: 80%; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-evenly; object-fit: fill; align-self: start">
+
+</div>
+
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Data Parallel Training
+
+- Each worker has identical copy of model
+- **Global batch of data split across workers**
+- Loss + Grads averaged across workers before updating parameters
+
+
+<div class="mermaid">
+flowchart TD
+D["dataset"] --> S1["subset1"]
+D --> S2["subset2"]
+D --> S3["subset3"]
+D --> S4["subset4"]
+S1 --> W1["Worker 1"]
+S2 --> W2["Worker 2"]
+S3 --> W3["Worker 3"]
+S4 --> W4["Worker 4"]
+
+</div>
+
+<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
+
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Broadcast Initial State
+
+- At the start of training (or when loading from a checkpoint), we want all of our workers to be initialized consistently
+	- **Broadcast** the model and optimizer states from `hvd.rank() == 0` worker
+
+
+<div class="mermaid">
+flowchart TD
+  0["GPU0"] --> 1["GPU 1"]
+	0 --> 2["GPU 2"]
+	0 -->|Model + Optimizer State| 3["GPU 3"]
+	0 --> ...
+	0 --> N["GPU N"]
+
+</div>
+
+<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Data Parallel Training
+
+<split left="2" right="3">
+
+- Disjoint subsets of a neural network are assigned to different devices
+- Each worker receives:
+	- **identical copy of model**
+	- **unique subset of data**
+
+
+<div class="mermaid">
+
+flowchart TD
+	subgraph identifier[" "]
+		direction LR
+		data --> subset1
+		data --> subset2
+		data --> subset3
+		data --> subset4
+		subset1
+		subset2
+		subset3
+		subset4
+	end
+	subgraph Workers
+		direction LR
+		subset1 --> GPX1
+		subset2 --> GPX2
+		subset3 --> GPX3
+		subset4 --> GPX4
+	end
+	GPX1 <.-> Communication["Avg + Distribute Gradients"]
+	GPX2 <.-> Communication
+	GPX3 <.-> Communication
+	GPX4 <.-> Communication
+
+</div>
+
+<!-- .element: style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-evenly" align="right" -->
+</split>
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+
+<div class="mermaid">
+flowchart LR
+	subgraph GPUs
+		direction LR
+		GPU1
+		GPU2
+		GPU3
+		GPU4
+	end
+	subgraph Network
+		direction LR
+		Model
+	end
+	Network --> GPU1
+	Network --> GPU2
+	Network --> GPU3
+	Network --> GPU4
+	subset1 --> GPU1
+	subset2 --> GPU2
+	subset3 --> GPU3
+	subset4 --> GPU4
+	subgraph Dataset
+		direction LR
+		subset1 
+		subset2
+		subset3 
+		subset4 
+	end
+	subgraph Communication
+		direction LR
+		GPU1 <.->|Broadcast| Allreduce["Allreduce"]
+		GPU2 <.->|Broadcast| Allreduce
+		GPU3 <.->|Broadcast| Allreduce
+		GPU4 <.->|Broadcast| Allreduce
+	end
+
+</div>
+
+<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
+
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# TensorFlow + Horovod
+
+- Set one GPU per process ID (`hvd.local_rank()`)
+  ```python
+  gpus = tf.config.experimental.list_physical_devices('GPU')
+  for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+  if gpus:
+      local_rank = hvd.local_rank()
+      tf.config.experimental.set_visible_devices(gpus[local_rank], 'GPU')
+  ```
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Scale the Learning Rate
+
+- Scale the learning rate by the number of workers to account for the increased batch size
+  ```python
+  import horovod.tensorflow as hvd
+  optimizer = tf.optimizers.Adam(lr_init * hvd.size())
+  ```
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Thank you!
+
+- Organizers
+- ALCF Data Science & Operations
+
+- Feel free to reach out!
+  <split even >
+
+    [<i class="fas fa-home"></i>](https://samforeman.me)
+    [<i class="far fa-paper-plane"></i>](mailto:///foremans@anl.gov)
+    [<i class="fab fa-twitter"></i>](https://www.twitter.com/saforem2)
+     </split>
+
+<div class="callout callout-color1">
+<div class="callout-title">
+<div class="callout-icon">
+
+<i class="fas fa-info-circle" ></i>
+
+
+</div>
+<div class="callout-title-inner">
+
+Acknowledgements
+
+</div>
+</div>
+<div class="callout-content">
+
+This research used resources of the Argonne Leadership Computing Facility, which is a DOE Office of Science User Facility supported under Contract DE-AC02-06CH11357.
+
+</div>
+</div>
+<!-- .element: style="max-width: 90%" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" template="template" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<style>
+
+:root {
+	--callout-radius:5px;
+  --r-math-color:#FAFAFA;
+	--cm-inline-background: #242424;
+	--cm-inline-foreground: #00CCFF;
+    --r-heading-text-transform: none;
+    --primaryBorderColor: #666666;
+    --r-heading-font: 'Inter', 'Arial', "OpenSans-Bold", "Open Sans", Helvetica, Impact, sans-serif;
+    --r-main-background-color: #1c1c1c!important;
+    --r-main-font: 'Inter', "Arial", "Open Sans", "Coming Soon", "SourceSansPro", Helvetica Neue, sans-serif;
+    --r-heading-letter-spacing: -0.45px;
+    --r-heading-word-spacing: 0.5px;
+    --r-heading-text-transform: none;
+    --r-heading-text-shadow: none;
+    --r-heading-font-weight: 700;
+    --r-heading1-text-shadow: none;
+    --r-main-font-size: 22px;
+	--r-main-line-height: 1.5em;
+    --r-monospace-font-size: 18px;
+    --r-heading1-size: 1.33em;
+    --r-heading2-size: 1.25em;
+    --r-heading3-size: 1.2em;
+    --r-heading4-size: 1.15em;
+    --r-heading5-size: 1.05em;
+    --r-heading6-size: 1.025em;
+    --r-heading-line-height:1.5em;
+    --r-main-font-family: 'Inter';
+    --r-code-font: 'JuliaMono', 'Hack', 'VictorMono', "agave Nerd Font", monospace;
+    --r-link-color: #03A9F4;
+    --r-link-color-dark: #f92672;
+    --r-link-color-hover: #63ff51;
+	--r-accent-color: #77CA29;
+    --r-controls-color: #228BE6;
+    --r-progress-color: #404040;
+	--r-header-accent: #1E8BC9;
+    --r-selection-background-color: rgba(255, 255, 0, 0.15);
+    --r-selection-color: rgb(255, 255, 0);
+    --r-main-color: #c8c8c8;
+    --text-muted: #757575;
+    --text-faint: #404040;
+    --r-heading-color: #FFF;
+    --r-background-color: #ffffff;
+	--cm-keyword: #c792ea;
+	--cm-atom: #f78c6c;
+	--cm-number: #ff5370;
+	--cm-type: #decb6b;
+	--cm-def: #82aaff;
+	--cm-property: #c792ea;
+	--cm-variable: #f07178;
+	--cm-variable-2: #EEFFFF;
+	--cm-variable-3: #f07178;
+	--cm-definition: #82aaff;
+	--cm-callee: #89ddff;
+	--cm-qualifier: #decb6b;
+	--cm-operator: #89ddff;
+	--cm-hr: #98e342;
+	--cm-link: #696d70;
+	--cm-error-bg: #ff5370;
+	--cm-header: #da7dae;
+	--cm-builtin: #ffcb6b;
+	--cm-meta: #ffcb6b;
+	--cm-matching-bracket: #FFFFFF;
+	--cm-tag: #ff5370;
+	--cm-tag-in-comment: #ff5370;
+	--cm-string-2: #f07178;
+	--cm-bracket: #ff5370;
+	--cm-comment: #676e95;
+	--cm-string: #c3e88d;
+	--cm-attribute: #c792ea;
+	--cm-attribute-in-comment: #c792ea;
+	--cm-background-color: #202020;
+	--cm-active-line-background-color: #353a50;
+	--cm-foreground-color: #bdbdbd;
+      -webkit-font-smoothing:subpixel-antialiased;
+	--chart-color-1: #ff00ff;
+	--chart-color-x: rgb(255,255,255);
+}
+
+.standout{
+	background: var(--cm-background-color);
+	padding:5px;
+	font-weight:700;
+	border-radius:6px;
+}
+
+.reveal pre {
+  display:block;
+  margin:auto;
+  width:auto;
+  font-family: var(--r-code-font);
+  font-size: var(--r-monospace-font-size);
+  padding: auto;
+  white-space: pre-wrap;
+}
+
+.reveal p {
+  margin:auto!important;
+  padding:auto!important;
+}
+
+.reveal pre code {
+    display: inline-block;
+	top: 2px;
+	white-space: pre;
+    bottom: 2px;
+	margin:auto;
+	padding:auto;
+    font-size: 0.8em;
+    background:var(--cm-background-color);
+    color: var(--cm-foreground-color)!important;
+	text-align: justify;
+    letter-spacing: -0.45px!important;
+    word-spacing: -0.5px!important;
+}
+
+.reveal {
+    font-family: var(--r-main-font), sans-serif;
+    font-size: var(--r-main-font-size);
+    font-weight: normal;
+    color: var(--r-main-color);
+    background-color: var(--r-main-background-color);
+}
+
+
+.reveal blockquote p {
+  color: var(--text-muted);
+  font-style: normal !important;
+  font-align: left;
+  display: inline;
+  text-align: left;
+}
+
+.reveal blockquote em{
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.reveal blockquote {
+  border-radius: 8px !important;
+  margin: 0.5rem 0rem 0.5rem 0rem;
+  text-align: left;
+  padding-top: 1rem;
+  padding-left: 2rem;
+  padding-bottom: 1rem;
+  padding-right: 2rem;
+  width: auto;
+  font-style: normal !important;
+}
+
+.reveal blockquote {
+	font-size: unset;
+	margin: auto;
+	padding:auto;
+}
+
+
+.reveal ul, ol {
+	text-align:left;
+}
+
+.reveal ul ul,
+.reveal ul ol,
+.reveal ol ol,
+.reveal ol ul {
+  text-align:left;
+}
+
+.reveal ul ul {
+    list-style: circle;
+}
+.container {
+  position: relative;
+}
+
+.make-it-pop {
+  filter: drop-shadow(0 0 10px purple);
+}
+
+.bottomright {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  font-size: 18px;
+}
+
+
+@media (max-width: 95%) {
+  section {
+    -webkit-flex-direction: column;
+    flex-direction: column;
+  }
+}
+
+.row {
+  display: flex;
+}
+
+.column {
+  flex: 50%;
+}
+
+.horizontal_dotted_line{
+  border-bottom: 2px dotted gray;
+}
+
+.footer {
+  font-size: 60%;
+  vertical-align:bottom;
+  color:#bdbdbd;
+  font-weight:400;
+  margin-left:-5px;
+}
+.note {
+  color:#f8f8f8;
+  border-radius:8px;
+  background-color:#35353540;
+  width: max-content;
+  border-color:#66666640;
+  padding: auto;
+  margin:auto;
+}
+
+#blue {
+  color: #00CCFF;
+}
+
+#red {
+  color: #FF5252;
+}
+
+
+.callout {
+  overflow: hidden;
+  border-style: none;
+  border-color: rgba(var(--callout-color), var(--callout-border-opacity));
+  border-width: var(--callout-border-width);
+  border-radius: var(--callout-radius);
+  margin: 1em 0;
+  mix-blend-mode: var(--callout-blend-mode);
+  background-color: rgba(var(--callout-color), 0.1);
+  padding: var(--callout-padding);
+
+}
+
+.reveal .code-wrapper code {
+	width: 98%;
+}
+.reveal code {
+  font-family: var(--r-code-font);
+  text-transform: none;
+  tab-size: 4;
+  /*border:1px solid red;*/
+  background:var(--cm-background-color);
+  color: var(--cm-foreground-color);
+  border-radius:2px;
+  letter-spacing: -0.45px!important;
+  word-spacing: -0.5px!important;
+}
+
+.reveal pre code {
+	padding: auto;
+	border:none;
+	border-radius:2px;
+	font-size:0.9em;
+	margin:auto;
+	background: var(--cm-background-color);
+}
+.reveal p code {
+  font-family: var(--r-code-font);
+  text-transform: none;
+  tab-size: 4;
+  padding:auto;
+  /* border:1px solid green; */
+  font-size:0.9em!important;
+  line-height:inherit;
+  background:var(--cm-inline-background);
+  color: var(--cm-inline-foreground);
+  border-radius:3px;
+  letter-spacing: -0.45px!important;
+  word-spacing: -0.5px!important;
+}
+
+mjx-container[jax="CHTML"][display="true"] mjx-math {
+  color: var(--r-math-color);
+}
+
+mjx-math {
+  color: var(--r-math-color);
+  background: none!important;
+  padding:unset;
+  vertical-align:inherit;
+}
+#customcontrols > ul {
+  display: none!important;
+}
+
+#customcontrols button {
+  display: none!important;
+}
+
+.reveal .slides > section.present, .reveal .slides > section > section.present {
+  min-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  position: absolute !important;
+  top: 0 !important;
+}
+section > h1 {
+  position: absolute !important;
+  top: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+h1 {
+	border-bottom: 3px solid var(--r-header-accent);
+	text-align: left!important;
+	min-width: max-content;
+	max-width: min-content;
+}
+
+.print-pdf .reveal .slides > section.present, .print-pdf .reveal .slides > section > section.present {
+  min-height: 770px !important;
+  position: relative !important;
+}
+
+.hljs {
+    background: var(--cm-background-color) !important;
+	font-size:inherit;
+}
+
+.hljs-main {
+	color: #ff5252
+}
+
+.hljs-built_in {
+  color: #63ff5b;
+}
+
+.hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta {
+	color: #454545;
+}
+
+.hljs-params{
+	color: #03A9F4;
+}
+
+.hljs-meta {
+	color: #AE81FF;
+}
+
+.hljs-string {
+	color: #FFFF00;
+}
+
+strong {
+	color: #FF5252!important;
+	font-weight: 700;
+}
+
+ul {
+	margin-left: 0;
+	padding-left:1em;
+}
+
+ol {
+	margin-left: 0;
+	padding-left:1em;
+}
+
+.reveal .code-wrapper code {
+ st white-space: unset;
+}
+
+.reveal pre {
+white-space: pre-wrap;
+}
+
+.reveal sup {
+	font-size:0.6em;
+}
+
+</style>
+</div></script></section></div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/math/math.js"></script>
+	<script src="plugin/mermaid/mermaid.js"></script>
+	<script src="plugin/chart/chart.min.js"></script>
+	<script src="plugin/chart/plugin.js"></script>
+	<script src="plugin/customcontrols/plugin.js"></script>
+	<script src="plugin/reveal-pointer/pointer.js"></script>
+
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+	  function isLight(color) {
+		let hex = color.replace('#', '');
+
+		// convert #fff => #ffffff
+		if(hex.length == 3){
+			hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+		}
+
+		const c_r = parseInt(hex.substr(0, 2), 16);
+		const c_g = parseInt(hex.substr(2, 2), 16);
+		const c_b = parseInt(hex.substr(4, 2), 16);
+		const brightness = ((c_r * 299) + (c_g * 587) + (c_b * 114)) / 1000;
+		return brightness > 155;
+	}
+
+	var bgColor = getComputedStyle(document.documentElement).getPropertyValue('--r-background-color').trim();
+	var isLight = isLight(bgColor);
+
+	if(isLight){
+		document.body.classList.add('has-light-background');
+	} else {
+		document.body.classList.add('has-dark-background');
+	}
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath.MathJax3,
+		  RevealMermaid,
+		  RevealChart,
+		  RevealCustomControls,
+	      RevealPointer
+        ],
+
+
+    	allottedTime: 120 * 1000,
+
+		mathjax3: {
+			mathjax: 'plugin/math/mathjax/tex-mml-chtml.js',
+		},
+		markdown: {
+		  gfm: true,
+		  mangle: true,
+		  pedantic: false,
+		  smartLists: false,
+		  smartypants: false,
+		},
+
+		mermaid: {
+			theme: isLight ? 'default' : 'dark',
+		},
+
+		customcontrols: {
+			controls: [
+			]
+		},
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"width":960,"height":540,"margin":0.04,"maxScale":2,"controls":false,"progress":true,"slideNumber":false,"center":true,"preloadIframes":false,"transition":"slide","transitionSpeed":"fast"}, queryOptions);
+    </script>
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+
+  <!-- created with Advanced Slides -->
+</html>
