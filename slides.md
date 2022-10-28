@@ -225,7 +225,6 @@ flowchart TD
 	- **unique subset of data**
 
 ```mermaid
-%%{init: {'securityLevel': 'loose', 'theme':'base' } }%%
 flowchart TD
 	subgraph identifier[" "]
 		direction LR
