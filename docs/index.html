@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <title>Why Distributed Training?</title>
+    <title>Large Scale Training</title>
     <link rel="stylesheet" href="dist/reveal.css" />
     <link rel="stylesheet" href="dist/theme/black.css" id="theme" />
     <link rel="stylesheet" href="plugin/highlight/monokai.css" />
@@ -99,10 +99,11 @@
 <div class="" style="background-color: #282828; border-radius: 8px; position: absolute; left: 15%; top: 37.5%; height: 25%; width: 70%; display: flex; flex-direction: column; align-items: center; justify-content: center" align="center">
 
 
-<span style="border-bottom:3px solid var(--r-header-accent); font-weight:800; font-size:1.75em; margin-bottom:0px;">Large Scale Training</span>
+# Large Scale Training
 
-<span style="font-size:0.8em; line-height:0.8em; margin-bottom:0px; margin-top:0px;">[<i class="fab fa-github fa-1x" alt="`fas:Github`"></i> argonne-lcf / ai-science-training-series](https://github.com/argonne-lcf/ai-science-training-series)</span> <!-- .element: style="color: #00CCFF!important; font-family: 'JuliaMono', monospace" -->
-
+<a href="https://github.com/argonne-lcf/ai-science-training-series">
+<i class="fab fa-github" ></i> argonne-lcf / ai-science-training-series
+</a>
 </div>
 
 <div class="" style="position: absolute; left: 0%; top: 70%; height: 10%; width: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end" align="left">
@@ -148,10 +149,10 @@
 
 <img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
 </div>
-</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" data-background-color="#1C1C1C" template="template" -->
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" data-background-color="#1C1C1C" template="templat.mde" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
-<img src="https://miro.medium.com/max/4800/1*h93R4BUIdUO4Mtq_tsYPPg.jpeg" alt="" style="width: 90%; display: flex; flex-direction: column; align-items: center; justify-content: center; object-fit: fill; align-self: center">
+<img src="./docs/assets/loss.jpeg" alt="" style="width: 90%; display: flex; flex-direction: column; align-items: center; justify-content: center; object-fit: fill; align-self: center">
 </div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
@@ -215,22 +216,17 @@
 # Model Parallel Training
 
 - Split up network over multiple workers
-
   - Each receives disjoint subset
   - All communication associated with subsets are distributed
 
 - Communication whenever dataflow between two subsets
-
 - Typically **more complicated** to implement than data parallel training
-
 - Suitable when the model is too large to fit onto a single device (CPU / GPU)
 </div>
 
 <div class="" style="position: absolute; left: 60%; top: 0%; height: 100%; width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center" >
 
-
-<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" style="max-width:80%;" align="right">
-<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: space-evenly" class="stretch-column" align="stretch" -->
+<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" style="max-width:80%;" > <!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: space-evenly" class="stretch-column" align="stretch" -->
 </div>
 
 
@@ -261,21 +257,21 @@
 
 <div class="mermaid">
 flowchart LR
-  subgraph G0["GPU0"]
+  subgraph X0["GPU0"]
     direction LR
     a["w0"]
   end
-  subgraph G1["GPU1"]
+  subgraph X1["GPU1"]
     direction LR
     b["w1"]
   end
-  subgraph G2["GPU2"]
+  subgraph X2["GPU2"]
     direction LR
     c["w2"]
   end
-  G1 & G0 <--> G2
-  G0 <--> G1
-  x["x0, x1, x2"] --> G0
+  X1 & X0 <--> X2
+  X0 <--> X1
+  x["x0, x1, x2"] --> X0
 
 </div>
 
@@ -372,7 +368,6 @@ S4 --> W4["Worker 4"]
 </div>
 
 <!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
-
 
 
 </div>
@@ -482,9 +477,9 @@ flowchart TD
 
 
 <div class="mermaid">
-flowchart LR
+flowchart TB
 	subgraph GPUs
-		direction LR
+		direction TB
 		GPU1
 		GPU2
 		GPU3
@@ -504,10 +499,10 @@ flowchart LR
 	subset4 --> GPU4
 	subgraph Dataset
 		direction LR
-		subset1 
+		subset1
 		subset2
-		subset3 
-		subset4 
+		subset3
+		subset4
 	end
 	subgraph Communication
 		direction LR
@@ -633,7 +628,7 @@ This research used resources of the Argonne Leadership Computing Facility, which
 
 <img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
 </div>
-</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" template="template" data-background-color="#1c1c1c" -->
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" template="templat.mde" data-background-color="#1c1c1c" -->
 <div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
 
 <style>
@@ -1124,7 +1119,7 @@ white-space: pre-wrap;
       // options from URL query string
       var queryOptions = Reveal().getQueryHash() || {};
 
-      var options = extend(defaultOptions, {"width":960,"height":540,"margin":0.04,"maxScale":2,"controls":false,"progress":true,"slideNumber":false,"center":true,"preloadIframes":false,"transition":"slide","transitionSpeed":"fast"}, queryOptions);
+      var options = extend(defaultOptions, {"width":960,"height":540,"margin":0.04,"maxScale":2,"controls":false,"progress":true,"slideNumber":false,"center":true,"preloadIframes":false,"transition":"slide","transitionSpeed":"normal"}, queryOptions);
     </script>
 
     <script>

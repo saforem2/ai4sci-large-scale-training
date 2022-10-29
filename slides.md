@@ -1,6 +1,6 @@
 ---
 bg: '#1c1c1c'
-title: Why Distributed Training?
+title: Large Scale Training
 cssClasses:
   - table-lines
 center: true
@@ -10,7 +10,7 @@ transition: slide
 background: #1c1c1c
 preloadIframes: false
 highlightTheme: 'monokai'
-defaultTemplate: "template"
+defaultTemplate: "templat.mde"
 maxScale: 2.0
 margin: 0.04
 css:
@@ -22,10 +22,11 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 
 <grid align="center" drop="center" drag="70 25" style="background-color:#282828; border-radius:8px;">
 
-<span style="border-bottom:3px solid var(--r-header-accent); font-weight:800; font-size:1.75em; margin-bottom:0px;">Large Scale Training</span>
+# Large Scale Training
 
-<span style="font-size:0.8em; line-height:0.8em; margin-bottom:0px; margin-top:0px;">[<i class="fab fa-github fa-1x" alt="`fas:Github`"/> argonne-lcf / ai-science-training-series](https://github.com/argonne-lcf/ai-science-training-series)</span> <!-- .element style="color:#00CCFF!important; font-family:'JuliaMono', monospace" -->
-
+<a href="https://github.com/argonne-lcf/ai-science-training-series">
+<i class="fab fa-github" /> argonne-lcf / ai-science-training-series
+</a>
 </grid>
 
 <grid drag="100 10" drop="0 70" align="bottomleft" >
@@ -55,7 +56,7 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 
 <!-- .slide bg="#1C1C1C" -->
 
-![](https://miro.medium.com/max/4800/1*h93R4BUIdUO4Mtq_tsYPPg.jpeg) <!-- .element style="width:90%;" align="center" -->
+![](./docs/assets/loss.jpeg) <!-- .element style="width:90%;" align="center" -->
 
 
 ---
@@ -91,21 +92,16 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 # Model Parallel Training
 
 - Split up network over multiple workers
-
   - Each receives disjoint subset
   - All communication associated with subsets are distributed
 
 - Communication whenever dataflow between two subsets
-
 - Typically **more complicated** to implement than data parallel training
-
 - Suitable when the model is too large to fit onto a single device (CPU / GPU)
 </grid>
 
 <grid drop="60 0" drag="40 100">
-
-<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" style="max-width:80%;" align="right">
-<!-- .element align="stretch" -->
+<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" style="max-width:80%;" > <!-- .element align="stretch" -->
 </grid>
 
 ---
@@ -123,21 +119,21 @@ $$y = w_0 * x_0 + w_1 * x_1 + w_2 * x_2$$
 
 ```mermaid
 flowchart LR
-  subgraph G0["GPU0"]
+  subgraph X0["GPU0"]
     direction LR
     a["w0"]
   end
-  subgraph G1["GPU1"]
+  subgraph X1["GPU1"]
     direction LR
     b["w1"]
   end
-  subgraph G2["GPU2"]
+  subgraph X2["GPU2"]
     direction LR
     c["w2"]
   end
-  G1 & G0 <--> G2
-  G0 <--> G1
-  x["x0, x1, x2"] --> G0
+  X1 & X0 <--> X2
+  X0 <--> X1
+  x["x0, x1, x2"] --> X0
 ```
 <!-- .element align="center" -->
 
@@ -191,7 +187,6 @@ S3 --> W3["Worker 3"]
 S4 --> W4["Worker 4"]
 ```
 <!-- .element align="center" -->
-
 
 ---
 
@@ -258,9 +253,9 @@ flowchart TD
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
 ```mermaid
-flowchart LR
+flowchart TB
 	subgraph GPUs
-		direction LR
+		direction TB
 		GPU1
 		GPU2
 		GPU3
@@ -280,10 +275,10 @@ flowchart LR
 	subset4 --> GPU4
 	subgraph Dataset
 		direction LR
-		subset1 
+		subset1
 		subset2
-		subset3 
-		subset4 
+		subset3
+		subset4
 	end
 	subgraph Communication
 		direction LR
