@@ -51,13 +51,11 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 	- e.g. scaling learning rate
 - See [Large Batch Training of Convolutional Networks](https://arxiv.org/abs/1708.03888)
 
-
 ---
 
 <!-- .slide bg="#1C1C1C" -->
 
-![](./docs/assets/loss.jpeg) <!-- .element style="width:90%;" align="center" -->
-
+![](https://miro.medium.com/max/4800/1*h93R4BUIdUO4Mtq_tsYPPg.jpeg)
 
 ---
 
@@ -80,21 +78,20 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 ---
 
 <!-- .slide template="[[template]]" bg="#1C1C1C" -->
-
-# Model Parallel Training <!-- .element style="font-size:2.0em;" -->
+# Model Parallel Training
+<!-- .element style="font-size:2.0em;" -->
 
 ---
 
 <!-- .slide template="[[template]]" bg="#1C1C1C" -->
 
-<grid drop="0 0" drag="55 100">
+<grid drop="0 0" drag="55 100" style="text-align:left;">
 
 # Model Parallel Training
 
 - Split up network over multiple workers
   - Each receives disjoint subset
   - All communication associated with subsets are distributed
-
 - Communication whenever dataflow between two subsets
 - Typically **more complicated** to implement than data parallel training
 - Suitable when the model is too large to fit onto a single device (CPU / GPU)
@@ -118,6 +115,7 @@ $$y = w_0 * x_0 + w_1 * x_1 + w_2 * x_2$$
 
 
 ```mermaid
+%%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true}, "sequence": { "mirrorActors": true } } }%%
 flowchart LR
   subgraph X0["GPU0"]
     direction LR
@@ -175,18 +173,19 @@ flowchart LR
 - **Global batch of data split across workers**
 - Loss + Grads averaged across workers before updating parameters
 
-```mermaid
-flowchart TD
-D["dataset"] --> S1["subset1"]
-D --> S2["subset2"]
-D --> S3["subset3"]
-D --> S4["subset4"]
-S1 --> W1["Worker 1"]
-S2 --> W2["Worker 2"]
-S3 --> W3["Worker 3"]
-S4 --> W4["Worker 4"]
-```
-<!-- .element align="center" -->
+  ```mermaid
+    %%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true }, "sequence": { "mirrorActors": true } } }%%
+  flowchart TD
+    D["dataset"] --> S1["subset1"]
+    D --> S2["subset2"]
+    D --> S3["subset3"]
+    D --> S4["subset4"]
+    S1 --> W1["Worker 1"]
+    S2 --> W2["Worker 2"]
+    S3 --> W3["Worker 3"]
+    S4 --> W4["Worker 4"]
+  ```
+  <!-- .element align="center" -->
 
 ---
 
@@ -198,6 +197,7 @@ S4 --> W4["Worker 4"]
 	- **Broadcast** the model and optimizer states from `hvd.rank() == 0` worker
 
 ```mermaid
+%%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true }, "sequence": { "mirrorActors": true } } }%%
 flowchart TD
   0["GPU0"] --> 1["GPU 1"]
 	0 --> 2["GPU 2"]
@@ -221,6 +221,7 @@ flowchart TD
 	- **unique subset of data**
 
 ```mermaid
+%%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true}, "sequence": { "mirrorActors": true } } }%%
 flowchart TD
 	subgraph identifier[" "]
 		direction LR
@@ -253,40 +254,42 @@ flowchart TD
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
 ```mermaid
-flowchart TB
-	subgraph GPUs
-		direction TB
-		GPU1
-		GPU2
-		GPU3
-		GPU4
-	end
-	subgraph Network
+%%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true}, "sequence": { "mirrorActors": true } } }%%
+flowchart TD
+  subgraph identifier[" "]
 		direction LR
-		Model
-	end
-	Network --> GPU1
-	Network --> GPU2
-	Network --> GPU3
-	Network --> GPU4
-	subset1 --> GPU1
-	subset2 --> GPU2
-	subset3 --> GPU3
-	subset4 --> GPU4
-	subgraph Dataset
-		direction LR
-		subset1
-		subset2
-		subset3
-		subset4
-	end
-	subgraph Communication
-		direction LR
-		GPU1 <.->|Broadcast| Allreduce["Allreduce"]
-		GPU2 <.->|Broadcast| Allreduce
-		GPU3 <.->|Broadcast| Allreduce
-		GPU4 <.->|Broadcast| Allreduce
-	end
+    GPU1
+    GPU2
+    GPU3
+    GPU4
+  end
+  subgraph Network
+    direction LR
+    Model
+  end
+  Network -.-> GPU1
+  Network -.-> GPU2
+  Network -.-> GPU3
+  Network -.-> GPU4
+  subset1 --> GPU1
+  subset2 --> GPU2
+  subset3 --> GPU3
+  subset4 --> GPU4
+  subgraph Dataset
+    direction LR
+    subset1
+    subset2
+    subset3
+    subset4
+  end
+  subgraph Communication
+    direction LR
+    GPU1 <-.-> AR[Allreduce]
+    GPU2 <-.-> AR
+    GPU3 <-.-> AR
+    GPU4 <-.-> AR
+  end
+  AR ==>|Broadcast| Network
 ```
 <!-- .element align="center" -->
 
@@ -381,13 +384,13 @@ flowchart TB
     --r-controls-color: #228BE6;
     --r-progress-color: #404040;
 	--r-header-accent: #1E8BC9;
-    --r-selection-background-color: rgba(255, 255, 0, 0.15);
-    --r-selection-color: rgb(255, 255, 0);
+    --r-selection-background-color: RGBA(255, 255, 0, 0.15);
+    --r-selection-color: RGB(255, 255, 0);
     --r-main-color: #c8c8c8;
     --text-muted: #757575;
     --text-faint: #404040;
     --r-heading-color: #FFF;
-    --r-background-color: #ffffff;
+    --r-background-color: #1c1c1c;
 	--cm-keyword: #c792ea;
 	--cm-atom: #f78c6c;
 	--cm-number: #ff5370;
@@ -403,7 +406,6 @@ flowchart TB
 	--cm-operator: #89ddff;
 	--cm-hr: #98e342;
 	--cm-link: #696d70;
-	--cm-error-bg: #ff5370;
 	--cm-header: #da7dae;
 	--cm-builtin: #ffcb6b;
 	--cm-meta: #ffcb6b;
@@ -416,12 +418,13 @@ flowchart TB
 	--cm-string: #c3e88d;
 	--cm-attribute: #c792ea;
 	--cm-attribute-in-comment: #c792ea;
-	--cm-background-color: #202020;
+	--cm-background-color: #1c1c1c;
 	--cm-active-line-background-color: #353a50;
 	--cm-foreground-color: #bdbdbd;
-      -webkit-font-smoothing:subpixel-antialiased;
+  -webkit-font-smoothing:subpixel-antialiased;
+  --font-smoothing:subpixel-antialiased;
 	--chart-color-1: #ff00ff;
-	--chart-color-x: rgb(255,255,255);
+  --chart-color-x: RGB(255.0,255.0,255.0);
 }
 
 .standout{
@@ -524,31 +527,11 @@ flowchart TB
   filter: drop-shadow(0 0 10px purple);
 }
 
-.bottomright {
-  position: absolute;
-  bottom: 8px;
-  right: 16px;
-  font-size: 18px;
-}
-
-
 @media (max-width: 95%) {
   section {
     -webkit-flex-direction: column;
     flex-direction: column;
   }
-}
-
-.row {
-  display: flex;
-}
-
-.column {
-  flex: 50%;
-}
-
-.horizontal_dotted_line{
-  border-bottom: 2px dotted gray;
 }
 
 .footer {
@@ -576,7 +559,6 @@ flowchart TB
   color: #FF5252;
 }
 
-
 .callout {
   overflow: hidden;
   border-style: none;
@@ -587,7 +569,6 @@ flowchart TB
   mix-blend-mode: var(--callout-blend-mode);
   background-color: rgba(var(--callout-color), 0.1);
   padding: var(--callout-padding);
-
 }
 
 .reveal .code-wrapper code {
@@ -597,8 +578,7 @@ flowchart TB
   font-family: var(--r-code-font);
   text-transform: none;
   tab-size: 4;
-  /*border:1px solid red;*/
-  background:var(--cm-background-color);
+  background-color:var(--cm-background-color);
   color: var(--cm-foreground-color);
   border-radius:2px;
   letter-spacing: -0.45px!important;
@@ -618,7 +598,6 @@ flowchart TB
   text-transform: none;
   tab-size: 4;
   padding:auto;
-  /* border:1px solid green; */
   font-size:0.9em!important;
   line-height:inherit;
   background:var(--cm-inline-background);
@@ -688,7 +667,7 @@ h1 {
   color: #63ff5b;
 }
 
-.hljs-comment, .hljs-quote, .hljs-deletion, .hljs-meta {
+.hljs-comment, .hljs-quote, .hljs-deletion {
 	color: #454545;
 }
 
@@ -727,8 +706,11 @@ ol {
 white-space: pre-wrap;
 }
 
+
 .reveal sup {
 	font-size:0.6em;
 }
 
 </style>
+
+<script> var config = { theme: 'default', logLevel: 'fatal', securityLevel: 'strict', startOnLoad: true, arrowMarkerAbsolute: false, er: { diagramPadding: 20, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, stroke: 'gray', fill: 'honeydew', fontSize: 12, useMaxWidth: true, }, flowchart: { diagramPadding: 8, htmlLabels: true, curve: 'basis', }, sequence: { diagramMarginX: 50, diagramMarginY: 10, actorMargin: 50, width: 150, height: 65, boxMargin: 10, boxTextMargin: 5, noteMargin: 10, messageMargin: 35, messageAlign: 'center', mirrorActors: true, bottomMarginAdj: 1, useMaxWidth: true, rightAngles: false, showSequenceNumbers: false, }, gantt: { titleTopMargin: 25, barHeight: 20, barGap: 4, topPadding: 50, leftPadding: 75, gridLineStartPadding: 35, fontSize: 11, fontFamily: '"Open Sans", sans-serif', numberSectionStyles: 4, axisFormat: '%Y-%m-%d', topAxis: false, }, }; mermaid.initialize(config); </script>
