@@ -973,7 +973,7 @@ body.fallback-highlighting[class*="theme-"] .markdown-preview-view pre.cm-s-obsi
 .reveal .code-wrapper code {
   color: #B0BEC5;
   font-family: var(--r-code-font);
-  font-size: 20px;
+  font-size: 18px;
   line-height:1.1em;
 }
 
