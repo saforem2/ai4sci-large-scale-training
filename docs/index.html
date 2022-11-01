@@ -512,10 +512,10 @@ flowchart TD
     end
     subgraph Workers
         direction LR
-        subset1 --> GPX1
-        subset2 --> GPX2
-        subset3 --> GPX3
-        subset4 --> GPX4
+        subset1 --> GPX1["GPU1"]
+        subset2 --> GPX2["GPU2"]
+        subset3 --> GPX3["GPU3"]
+        subset4 --> GPX4["GPU4"]
     end
     GPX1 <.-> Communication["Avg + Distribute Gradients"]
     GPX2 <.-> Communication
