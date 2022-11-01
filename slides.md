@@ -268,40 +268,37 @@ flowchart TD
 
 - Disjoint subsets of a neural network are assigned to different devices
 - Each worker receives:
-	- **identical copy of model**
-	- **unique subset of data**
+    - **identical copy of model**
+    - **unique subset of data**
 </grid>
-
-<grid drag="60 100" drop="40 0" align="stretch">
 
 ```mermaid
 %%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true}, "sequence": { "mirrorActors": true } } }%%
 flowchart TD
-	subgraph identifier[" "]
-		direction LR
-		data --> subset1
-		data --> subset2
-		data --> subset3
-		data --> subset4
-		subset1
-		subset2
-		subset3
-		subset4
-	end
-	subgraph Workers
-		direction LR
-		subset1 --> GPX1
-		subset2 --> GPX2
-		subset3 --> GPX3
-		subset4 --> GPX4
-	end
-	GPX1 <.-> Communication["Avg + Distribute Gradients"]
-	GPX2 <.-> Communication
-	GPX3 <.-> Communication
-	GPX4 <.-> Communication
+    subgraph identifier[" "]
+        direction LR
+        data --> subset1
+        data --> subset2
+        data --> subset3
+        data --> subset4
+        subset1
+        subset2
+        subset3
+        subset4
+    end
+    subgraph Workers
+        direction LR
+        subset1 --> GPX1
+        subset2 --> GPX2
+        subset3 --> GPX3
+        subset4 --> GPX4
+    end
+    GPX1 <.-> Communication["Avg + Distribute Gradients"]
+    GPX2 <.-> Communication
+    GPX3 <.-> Communication
+    GPX4 <.-> Communication
 ```
 <!-- .element align="right" -->
-</grid>
 
 ---
 
@@ -583,10 +580,10 @@ test_dataset = (
 <style>
 
 :root {
-	--callout-radius:5px;
-  --r-math-color:#FAFAFA;
-	--cm-inline-background: #242424;
-	--cm-inline-foreground: #00CCFF;
+    --callout-radius:5px;
+    --r-math-color:#FAFAFA;
+    --cm-inline-background: #242424;
+    --cm-inline-foreground: #00CCFF;
     --r-heading-text-transform: none;
     --primaryBorderColor: #666666;
     --r-heading-font: 'Inter', 'Arial', "OpenSans-Bold", "Open Sans", Helvetica, Impact, sans-serif;
@@ -599,7 +596,7 @@ test_dataset = (
     --r-heading-font-weight: 700;
     --r-heading1-text-shadow: none;
     --r-main-font-size: 22px;
-	--r-main-line-height: 1.5em;
+    --r-main-line-height: 1.5em;
     --r-monospace-font-size: 18px;
     --r-heading1-size: 1.33em;
     --r-heading2-size: 1.25em;
@@ -613,10 +610,10 @@ test_dataset = (
     --r-link-color: #03A9F4;
     --r-link-color-dark: #f92672;
     --r-link-color-hover: #63ff51;
-	--r-accent-color: #77CA29;
+    --r-accent-color: #77CA29;
     --r-controls-color: #228BE6;
     --r-progress-color: #404040;
-	--r-header-accent: #1E8BC9;
+    --r-header-accent: #1E8BC9;
     --r-selection-background-color: RGBA(255, 255, 0, 0.15);
     --r-selection-color: RGB(255, 255, 0);
     --r-main-color: #c8c8c8;
@@ -624,48 +621,48 @@ test_dataset = (
     --text-faint: #404040;
     --r-heading-color: #FFF;
     --r-background-color: #1c1c1c;
-	--cm-keyword: #c792ea;
-	--cm-atom: #f78c6c;
-	--cm-number: #ff5370;
-	--cm-type: #decb6b;
-	--cm-def: #82aaff;
-	--cm-property: #c792ea;
-	--cm-variable: #f07178;
-	--cm-variable-2: #EEFFFF;
-	--cm-variable-3: #f07178;
-	--cm-definition: #82aaff;
-	--cm-callee: #89ddff;
-	--cm-qualifier: #decb6b;
-	--cm-operator: #89ddff;
-	--cm-hr: #98e342;
-	--cm-link: #696d70;
-	--cm-header: #da7dae;
-	--cm-builtin: #ffcb6b;
-	--cm-meta: #ffcb6b;
-	--cm-matching-bracket: #FFFFFF;
-	--cm-tag: #ff5370;
-	--cm-tag-in-comment: #ff5370;
-	--cm-string-2: #f07178;
-	--cm-bracket: #ff5370;
-	--cm-comment: #676e95;
-	--cm-string: #c3e88d;
-	--cm-attribute: #c792ea;
-	--cm-attribute-in-comment: #c792ea;
-	--cm-background-color: #1c1c1c;
-	--cm-active-line-background-color: #353a50;
-	--cm-foreground-color: #AE81FF;
-	--code-normal: #AE81FF;
-  -webkit-font-smoothing:subpixel-antialiased;
-  --font-smoothing:subpixel-antialiased;
-	--chart-color-1: #ff00ff;
-  --chart-color-x: RGB(255.0,255.0,255.0);
+    --cm-keyword: #c792ea;
+    --cm-atom: #f78c6c;
+    --cm-number: #ff5370;
+    --cm-type: #decb6b;
+    --cm-def: #82aaff;
+    --cm-property: #c792ea;
+    --cm-variable: #f07178;
+    --cm-variable-2: #EEFFFF;
+    --cm-variable-3: #f07178;
+    --cm-definition: #82aaff;
+    --cm-callee: #89ddff;
+    --cm-qualifier: #decb6b;
+    --cm-operator: #89ddff;
+    --cm-hr: #98e342;
+    --cm-link: #696d70;
+    --cm-header: #da7dae;
+    --cm-builtin: #ffcb6b;
+    --cm-meta: #ffcb6b;
+    --cm-matching-bracket: #FFFFFF;
+    --cm-tag: #ff5370;
+    --cm-tag-in-comment: #ff5370;
+    --cm-string-2: #f07178;
+    --cm-bracket: #ff5370;
+    --cm-comment: #676e95;
+    --cm-string: #c3e88d;
+    --cm-attribute: #c792ea;
+    --cm-attribute-in-comment: #c792ea;
+    --cm-background-color: #1c1c1c;
+    --cm-active-line-background-color: #353a50;
+    --cm-foreground-color: #AE81FF;
+    --code-normal: #AE81FF;
+    -webkit-font-smoothing:subpixel-antialiased;
+    --font-smoothing:subpixel-antialiased;
+    --chart-color-1: #ff00ff;
+    --chart-color-x: RGB(255.0,255.0,255.0);
 }
 
 .standout{
-	background: var(--cm-background-color);
-	padding:5px;
-	font-weight:700;
-	border-radius:6px;
+    background: var(--cm-background-color);
+    padding:5px;
+    font-weight:700;
+    border-radius:6px;
 }
 
 .reveal pre {
@@ -685,15 +682,15 @@ test_dataset = (
 
 .reveal pre code {
     display: inline-block;
-	top: 2px;
-	white-space: pre;
+    top: 2px;
+    white-space: pre;
     bottom: 2px;
-	margin:auto;
-	padding:auto;
+    margin:auto;
+    padding:auto;
     font-size: 0.8em;
     background:var(--cm-background-color);
     color: var(--cm-foreground-color)!important;
-	text-align: justify;
+    text-align: justify;
     letter-spacing: -0.45px!important;
     word-spacing: -0.5px!important;
 }
@@ -708,11 +705,11 @@ test_dataset = (
 
 
 .reveal blockquote p {
-  color: var(--text-muted);
-  font-style: normal !important;
-  font-align: left;
-  display: inline;
-  text-align: left;
+    color: var(--text-muted);
+    font-style: normal !important;
+    font-align: left;
+    display: inline;
+    text-align: left;
 }
 
 .reveal blockquote em{
