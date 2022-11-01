@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     <title>Large Scale Training</title>
-    <link rel="stylesheet" href="dist/reveal.css" />
-    <link rel="stylesheet" href="dist/theme/black.css" id="theme" />
-    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
-	<link rel="stylesheet" href="css/layout.css" />
-	<link rel="stylesheet" href="plugin/customcontrols/style.css">
+    <link rel="stylesheet" href="/dist/reveal.css" />
+    <link rel="stylesheet" href="/dist/theme/black.css" id="theme" />
+    <link rel="stylesheet" href="/plugin/highlight/monokai.css" />
+	<link rel="stylesheet" href="/css/layout.css" />
+	<link rel="stylesheet" href="/plugin/customcontrols/style.css">
 
-	<link rel="stylesheet" href="plugin/reveal-pointer/pointer.css" />
+	<link rel="stylesheet" href="/plugin/reveal-pointer/pointer.css" />
 
-    <link rel="stylesheet" href="./custom.css" />
-    <link rel="stylesheet" href="./app.css" />
+    <link rel="stylesheet" href="/./custom.css" />
+    <link rel="stylesheet" href="/./app.css" />
 
-    <script defer src="dist/fontawesome/all.min.js"></script>
+    <script defer src="/dist/fontawesome/all.min.js"></script>
 
 	<script type="text/javascript">
 		var forgetPop = true;
@@ -485,41 +485,6 @@ flowchart LR
 
 <!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
 
-# Broadcast Initial State
-
-- At the start of training (or when loading from a checkpoint), we want all of our workers to be initialized consistently
-	- **Broadcast** the model and optimizer states from `hvd.rank() == 0` worker
-
-
-<div class="mermaid">
-
-flowchart TD
-  0["GPU0"] --> 1["GPU 1"]
-	0 --> 2["GPU 2"]
-	0 -->|Model + Optimizer State| 3["GPU 3"]
-	0 --> ...
-	0 --> N["GPU N"]
-
-</div>
-
-<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
-
-
-</div>
-
-<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
-
-<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
-</div>
-</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
-<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
-
-<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
-
-
-
-<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
-
 <div class="" style="position: absolute; left: 5%; top: 10%; height: 90%; width: 40%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start" align="left">
 
 
@@ -615,6 +580,41 @@ flowchart TD
     GPU4 <-.-> AR
   end
   AR ==>|Broadcast| Network
+
+</div>
+
+<!-- .element: style="display: flex; flex-direction: column; align-items: center; justify-content: center" align="center" -->
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Broadcast Initial State
+
+- At the start of training (or when loading from a checkpoint), we want all of our workers to be initialized consistently
+	- **Broadcast** the model and optimizer states from `hvd.rank() == 0` worker
+
+
+<div class="mermaid">
+
+flowchart TD
+  0["GPU0"] --> 1["GPU 1"]
+	0 --> 2["GPU 2"]
+	0 -->|Model + Optimizer State| 3["GPU 3"]
+	0 --> ...
+	0 --> N["GPU N"]
 
 </div>
 
@@ -1502,18 +1502,18 @@ body.fallback-highlighting[class*="theme-"] .markdown-preview-view pre.cm-s-obsi
 </div></script></section></div>
     </div>
 
-    <script src="dist/reveal.js"></script>
+    <script src="/dist/reveal.js"></script>
 
-    <script src="plugin/markdown/markdown.js"></script>
-    <script src="plugin/highlight/highlight.js"></script>
-    <script src="plugin/zoom/zoom.js"></script>
-    <script src="plugin/notes/notes.js"></script>
-    <script src="plugin/math/math.js"></script>
-	<script src="plugin/mermaid/mermaid.js"></script>
-	<script src="plugin/chart/chart.min.js"></script>
-	<script src="plugin/chart/plugin.js"></script>
-	<script src="plugin/customcontrols/plugin.js"></script>
-	<script src="plugin/reveal-pointer/pointer.js"></script>
+    <script src="/plugin/markdown/markdown.js"></script>
+    <script src="/plugin/highlight/highlight.js"></script>
+    <script src="/plugin/zoom/zoom.js"></script>
+    <script src="/plugin/notes/notes.js"></script>
+    <script src="/plugin/math/math.js"></script>
+	<script src="/plugin/mermaid/mermaid.js"></script>
+	<script src="/plugin/chart/chart.min.js"></script>
+	<script src="/plugin/chart/plugin.js"></script>
+	<script src="/plugin/customcontrols/plugin.js"></script>
+	<script src="/plugin/reveal-pointer/pointer.js"></script>
 
     <script>
       function extend() {
@@ -1576,7 +1576,7 @@ body.fallback-highlighting[class*="theme-"] .markdown-preview-view pre.cm-s-obsi
     	allottedTime: 120 * 1000,
 
 		mathjax3: {
-			mathjax: 'plugin/math/mathjax/tex-mml-chtml.js',
+			mathjax: '/plugin/math/mathjax/tex-mml-chtml.js',
 		},
 		markdown: {
 		  gfm: true,

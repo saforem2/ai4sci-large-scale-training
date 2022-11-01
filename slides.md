@@ -242,26 +242,6 @@ flowchart LR
 
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
-# Broadcast Initial State
-
-- At the start of training (or when loading from a checkpoint), we want all of our workers to be initialized consistently
-	- **Broadcast** the model and optimizer states from `hvd.rank() == 0` worker
-
-```mermaid
-%%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true }, "sequence": { "mirrorActors": true } } }%%
-flowchart TD
-  0["GPU0"] --> 1["GPU 1"]
-	0 --> 2["GPU 2"]
-	0 -->|Model + Optimizer State| 3["GPU 3"]
-	0 --> ...
-	0 --> N["GPU N"]
-```
-<!-- .element align="center" -->
-
----
-
-<!-- .slide template="[[template]]" bg="#1c1c1c" -->
-
 <grid drag="40 90" drop="5 10" align="topleft">
 
 # Data Parallel Training
@@ -340,6 +320,26 @@ flowchart TD
     GPU4 <-.-> AR
   end
   AR ==>|Broadcast| Network
+```
+<!-- .element align="center" -->
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Broadcast Initial State
+
+- At the start of training (or when loading from a checkpoint), we want all of our workers to be initialized consistently
+	- **Broadcast** the model and optimizer states from `hvd.rank() == 0` worker
+
+```mermaid
+%%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true }, "sequence": { "mirrorActors": true } } }%%
+flowchart TD
+  0["GPU0"] --> 1["GPU 1"]
+	0 --> 2["GPU 2"]
+	0 -->|Model + Optimizer State| 3["GPU 3"]
+	0 --> ...
+	0 --> N["GPU N"]
 ```
 <!-- .element align="center" -->
 
