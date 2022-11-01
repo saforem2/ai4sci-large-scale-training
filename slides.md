@@ -262,7 +262,6 @@ flowchart TD
 
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
-
 <grid drag="40 90" drop="5 10" align="topleft">
 
 # Data Parallel Training
@@ -446,6 +445,7 @@ flowchart TD
 # TensorFlow + Horovod
 
 - Training step then looks like:
+
   ```python
   @tf.function
   def train_step(data, model, loss_fn, optimizer, first_batch):
@@ -453,14 +453,13 @@ flowchart TD
       with tf.GradientTape() as tape:
           output = model(batch, training=True)
           loss = loss_fn(target, output)
-  # wrap `tf.GradientTape` with `hvd.DistributedGradientTape`
-  tape = hvd.DistributedGradientTape(tape)
-  grads = tape.gradient(loss, model.trainable_variables)
-  optimizer.apply_gradients(zip(grads, model.trainable_variables))
-  if first_batch:
-      hvd.broadcast_variables(model.variables, root_rank=0)
-      hvd.broadcast_variables(optimizer.variables, root_rank=0)
-  return loss, output
+      tape = hvd.DistributedGradientTape(tape)
+      grads = tape.gradient(loss, model.trainable_variables)
+      optimizer.apply_gradients(zip(grads, model.trainable_variables))
+      if first_batch:
+          hvd.broadcast_variables(model.variables, root_rank=0)
+          hvd.broadcast_variables(optimizer.variables, root_rank=0)
+      return loss, output
   ```
 
 ---
@@ -486,7 +485,9 @@ flowchart TD
 # Deal with Data
 
 ```python
-(images, labels), (xtest, ytest) = tf.keras.datasets.mnist.load_data(path='mnist.npz')
+(images, labels), (xtest, ytest) = (
+    tf.keras.datasets.mnist.load_data(path='mnist.npz')
+)
 dataset = tf.data.Dataset.from_tensor_slices(
     (tf.cast(images[..., None] / 255.0, tf.float32),
      tf.cast(labels, tf.int64))
@@ -495,12 +496,15 @@ test_dataset = tf.data.Dataset.from_tensor_slices(
     (tf.cast(xtest[..., None] / 255.0, tf.float32),
      tf.cast(ytest, tf.int64)))
 )
-nsamples = len(list(dataset))
-ntest = len(list(test_dataset))
 dataset = dataset.repeat().shuffle(1000).batch(args.batch_size)
-test_dataset = test_dataset.shard(num_shards=hvd.size(), index=hvd.rank()).repeat().batch(args.batch_size)
-
+test_dataset = (
+    test_dataset.shard(
+        num_shards=hvd.size(),
+        index=hvd.rank()
+    ).repeat().batch(args.batch_size)
+)
 ```
+<!-- .element style="font-size:0.5em;" -->
 
 ---
 
@@ -512,6 +516,24 @@ test_dataset = test_dataset.shard(num_shards=hvd.size(), index=hvd.rank()).repea
   ```python
   global_loss = hvd.allreduce(loss, average=True)
   global_acc = hvd.allreduce(acc, average=True)
+  ```
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Hands-On
+
+1. Navigate to `ai-science-training-series`
+2. `git pull`
+3. Navigate into `07_largeScaleTraining/src/ai4sci`
+4. To run (with a `batch_size=512`):
+  ```bash
+  ./main.sh batch_size=512 > main-bs-512.log 2>&1 &
+  ```
+6. View output:
+  ```bash
+  tail -f "main-bs-512.log" $(tail -1 logs/latest)
   ```
 
 ---
@@ -949,8 +971,10 @@ body.fallback-highlighting[class*="theme-"] .markdown-preview-view pre.cm-s-obsi
 }
 
 .reveal .code-wrapper code {
-  color: #bdbdbd;
-  font-family: 'JuliaMono', 'agave Nerd Font', monospace;
+  color: #B0BEC5;
+  font-family: var(--r-code-font);
+  font-size: 20px;
+  line-height:1.1em;
 }
 
 </style>

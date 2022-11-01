@@ -520,7 +520,6 @@ flowchart TD
 
 <!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
 
-
 <div class="" style="position: absolute; left: 5%; top: 10%; height: 90%; width: 40%; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start" align="left">
 
 
@@ -835,6 +834,7 @@ Keeping the communication to computation ratio small is important for effective 
 # TensorFlow + Horovod
 
 - Training step then looks like:
+
   ```python
   @tf.function
   def train_step(data, model, loss_fn, optimizer, first_batch):
@@ -842,14 +842,13 @@ Keeping the communication to computation ratio small is important for effective 
       with tf.GradientTape() as tape:
           output = model(batch, training=True)
           loss = loss_fn(target, output)
-  # wrap `tf.GradientTape` with `hvd.DistributedGradientTape`
-  tape = hvd.DistributedGradientTape(tape)
-  grads = tape.gradient(loss, model.trainable_variables)
-  optimizer.apply_gradients(zip(grads, model.trainable_variables))
-  if first_batch:
-      hvd.broadcast_variables(model.variables, root_rank=0)
-      hvd.broadcast_variables(optimizer.variables, root_rank=0)
-  return loss, output
+      tape = hvd.DistributedGradientTape(tape)
+      grads = tape.gradient(loss, model.trainable_variables)
+      optimizer.apply_gradients(zip(grads, model.trainable_variables))
+      if first_batch:
+          hvd.broadcast_variables(model.variables, root_rank=0)
+          hvd.broadcast_variables(optimizer.variables, root_rank=0)
+      return loss, output
   ```
 
 
@@ -917,7 +916,9 @@ When randomly selecting, it is important that each worker uses different seeds t
 # Deal with Data
 
 ```python
-(images, labels), (xtest, ytest) = tf.keras.datasets.mnist.load_data(path='mnist.npz')
+(images, labels), (xtest, ytest) = (
+    tf.keras.datasets.mnist.load_data(path='mnist.npz')
+)
 dataset = tf.data.Dataset.from_tensor_slices(
     (tf.cast(images[..., None] / 255.0, tf.float32),
      tf.cast(labels, tf.int64))
@@ -926,12 +927,15 @@ test_dataset = tf.data.Dataset.from_tensor_slices(
     (tf.cast(xtest[..., None] / 255.0, tf.float32),
      tf.cast(ytest, tf.int64)))
 )
-nsamples = len(list(dataset))
-ntest = len(list(test_dataset))
 dataset = dataset.repeat().shuffle(1000).batch(args.batch_size)
-test_dataset = test_dataset.shard(num_shards=hvd.size(), index=hvd.rank()).repeat().batch(args.batch_size)
-
+test_dataset = (
+    test_dataset.shard(
+        num_shards=hvd.size(),
+        index=hvd.rank()
+    ).repeat().batch(args.batch_size)
+)
 ```
+<!-- .element: style="font-size: 0.5em" -->
 
 
 </div>
@@ -955,6 +959,36 @@ test_dataset = test_dataset.shard(num_shards=hvd.size(), index=hvd.rank()).repea
   ```python
   global_loss = hvd.allreduce(loss, average=True)
   global_acc = hvd.allreduce(acc, average=True)
+  ```
+
+
+</div>
+
+<div class="" style="position: absolute; left: 0%; top: 92%; height: 8%; width: 100%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end" align="right">
+
+<img src="https://raw.githubusercontent.com/saforem2/physicsSeminar/main/assets/Argonne_cmyk_white.svg" alt="Argonne National Laboratory">
+</div>
+</div></script></section><section  data-markdown><script type="text/template"><!-- .slide: class="has-dark-background drop" 100%;text-align:left;line-height:1.5em;"="true" data-background-color="#1c1c1c" -->
+<div class="" style="position: absolute; left: 0px; top: 0px; height: 540px; width: 960px; min-height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center" absolute="true">
+
+<div class="" style="border-left: 0px solid #00CCFF; top: 0!important; width: 98%!important; text-align: left; margin: auto; padding: auto; padding-left: 2%" drag="100 100">
+
+
+
+<!-- .slide: class="has-dark-background" data-background-color="#1c1c1c" -->
+
+# Hands-On
+
+1. Navigate to `ai-science-training-series`
+2. `git pull`
+3. Navigate into `07_largeScaleTraining/src/ai4sci`
+4. To run (with a `batch_size=512`):
+  ```bash
+  ./main.sh batch_size=512 > main-bs-512.log 2>&1 &
+  ```
+6. View output:
+  ```bash
+  tail -f "main-bs-512.log" $(tail -1 logs/latest)
   ```
 
 
@@ -1429,8 +1463,10 @@ body.fallback-highlighting[class*="theme-"] .markdown-preview-view pre.cm-s-obsi
 }
 
 .reveal .code-wrapper code {
-  color: #bdbdbd;
-  font-family: 'JuliaMono', 'agave Nerd Font', monospace;
+  color: #B0BEC5;
+  font-family: var(--r-code-font);
+  font-size: 20px;
+  line-height:1.1em;
 }
 
 </style>
