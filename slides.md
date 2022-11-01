@@ -15,6 +15,7 @@ maxScale: 2.0
 margin: 0.04
 css:
  - ./custom.css
+ - ./app.css
 date created: Thursday, October 27th 2022, 4:08:11 pm
 ---
 
@@ -103,9 +104,30 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 
 ---
 
-<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+<!-- .slide template="[[template]]" bg="#1C1C1C" -->
+
+<grid drop="0 0" drag="55 100" style="text-align:left;">
 
 # Model Parallel Training
+
+- Suitable when the model is too large to fit onto a single device
+  - Partitioning the model into different subsets **is not an easy task**
+  - Might introduce load imbalancing issues limiting scale efficiency
+- 🤗 [huggingface/transformers](https://github.com/huggingface/transformers) useful reference
+  - Excellent series of posts in their documentation on [Model Parallelism](https://huggingface.co/docs/transformers/parallelism)
+
+</grid>
+
+<grid drop="60 0" drag="40 100">
+<img src="https://saforem2.github.io/distributed-training-slides/assets/model-parallel.svg" style="max-width:80%;" > <!-- .element align="stretch" -->
+</grid>
+
+---
+
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Model Parallel Training: Example
 
 $$y = w_0 * x_0 + w_1 * x_1 + w_2 * x_2$$
 
@@ -150,10 +172,10 @@ flowchart LR
 
 # Data Parallel Training
 
-- Each worker has identical copy of complete model
-- Each Worker computes the corresponding loss and gradients w.r.t **local** data
-- Before updating parameters, loss and gradients averaged across workers
-- Typically easier / simpler to implement
+- Typically easier to implement
+- Existing frameworks ([Horovod](https://horovod.readthedocs.io/en/stable/index.html), [DeepSpeed](https://github.com/microsoft/DeepSpeed), [DDP](https://pytorch.org/docs/stable/notes/ddp.html), etc)
+  - Relatively simple to get up and running (minor modifications to code)[^hvd]
+- Recent presentation on data-parallel training available on [YouTube](https://youtu.be/930yrXjNkgM)
 
 </grid>
 
@@ -162,6 +184,35 @@ flowchart LR
 <img src="https://saforem2.github.io/distributed-training-slides/assets/data-parallel.svg" style="max-width:66%;"> <!-- .element align="stretch" -->
 </grid>
 
+[^1]: [Concepts: Horovod](https://horovod.readthedocs.io/en/stable/concepts_include.html)
+
+---
+
+<!-- .slide template="[[template]]" bg="#1C1C1C" -->
+
+<grid drop="0 0" drag="55 100" style="text-align:left!important;">
+
+# Data Parallel Training
+
+- Each worker has **copy of complete model**
+- Global batch of data split into multiple mini-batches
+  - Each worker computes the corresponding **loss and gradients from local data**
+- Before updating parameters, loss and gradients averaged across workers
+</grid>
+
+<grid drop="60 0" drag="40 100">
+
+<img src="https://saforem2.github.io/distributed-training-slides/assets/data-parallel.svg" style="max-width:66%;"> <!-- .element align="stretch" -->
+</grid>
+
+---
+
+<!-- slide template="[[template]]" bg="#1c1c1c"-->
+
+<grid drag="90 90" drop="top">
+
+<img src="https://saforem2.github.io/distributed-training-slides/assets/avgGrads.svg">
+</grid>
 
 ---
 
@@ -211,14 +262,18 @@ flowchart TD
 
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
-# Data Parallel Training
 
-<split left="2" right="3">
+<grid drag="40 90" drop="5 10" align="topleft">
+
+# Data Parallel Training
 
 - Disjoint subsets of a neural network are assigned to different devices
 - Each worker receives:
 	- **identical copy of model**
 	- **unique subset of data**
+</grid>
+
+<grid drag="60 100" drop="40 0" align="stretch">
 
 ```mermaid
 %%{init: { "theme": "null", "fontFamily": "monospace", "logLevel": "debug", "deterministicIds": true, "flowchart": { "htmlLabels": true}, "sequence": { "mirrorActors": true } } }%%
@@ -247,7 +302,7 @@ flowchart TD
 	GPX4 <.-> Communication
 ```
 <!-- .element align="right" -->
-</split>
+</grid>
 
 ---
 
@@ -293,13 +348,74 @@ flowchart TD
 ```
 <!-- .element align="center" -->
 
+---
+
+<!-- slide template="[[template]]" bg="#1c1c1c"-->
+
+# Best Practices
+
+- Use parallel IO whenever possible
+  - Feed each rank from different files
+  - Use MPI IO to have each rank read its own batch from a file
+  - Use several ranks to read data, MPI to scatter to remaining ranks
+    - Most practical in big _at-scale_ training
+
+> [!warning] Computation stalls during communication!
+> Keeping the communication to computation ratio small is important for effective scaling
+
+---
+<!-- slide template="[[template]]" bg="#1c1c1c"-->
+
+# Best Practices
+
+- Take advantage of data storage
+  - Use [striping on lustre](https://wiki.lustre.org/Configuring_Lustre_File_Striping)
+  - Use the right optimizations for Aurora, Polaris, etc.
+- Preload data when possible
+  - Offloading to a GPU frees CPU cycles for loading the next batch of data
+    - **minimize IO latency this way**
+
+
+---
+<!-- slide template="[[template]]" bg="#1c1c1c"-->
+
+<grid drag="99 99" drop="top" align="center">
+
+# Comparison
+
+<img src="https://saforem2.github.io/distributed-training-slides/assets/ParallelismSplits.svg">
+
+</grid>
 
 ---
 
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Horovod: Overview
+
+1. Initialize Horovod[^hvdtf]
+2. Assign GPUs to each rank
+3. Scale the initial learning rate by num. workers
+4. Distribute gradients + broadcast state
+    - Distribute gradients by wrapping `tf.GradientTape` with `hvd.DistributedGradientTape`
+    - Ensure consistent initialization by broadcasting model weights and optimizer state from `rank == 0` to other workers
+5. Ensure workers are always receiving unique data
+6. Take global averages when calculating `loss`, `acc`, etc. using `hvd.allreduce(...)`
+7. Save checkpoints _only_ from `rank == 0` to prevent race conditions
+
+[^hvdtf]: [Horovod with Tensorflow](https://horovod.readthedocs.io/en/stable/tensorflow.html)
+
+---
 
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
 # TensorFlow + Horovod
+
+- Initialize Horovod:
+  ```python
+  import horovod.tensorflow as hvd
+  hvd.init()
+  ```
 
 - Set one GPU per process ID (`hvd.local_rank()`)
   ```python
@@ -317,10 +433,85 @@ flowchart TD
 
 # Scale the Learning Rate
 
-- Scale the learning rate by the number of workers to account for the increased batch size
+1. Scale by the number of workers to account for increased batch size
   ```python
   import horovod.tensorflow as hvd
   optimizer = tf.optimizers.Adam(lr_init * hvd.size())
+  ```
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# TensorFlow + Horovod
+
+- Training step then looks like:
+  ```python
+  @tf.function
+  def train_step(data, model, loss_fn, optimizer, first_batch):
+      batch, target = data
+      with tf.GradientTape() as tape:
+          output = model(batch, training=True)
+          loss = loss_fn(target, output)
+  # wrap `tf.GradientTape` with `hvd.DistributedGradientTape`
+  tape = hvd.DistributedGradientTape(tape)
+  grads = tape.gradient(loss, model.trainable_variables)
+  optimizer.apply_gradients(zip(grads, model.trainable_variables))
+  if first_batch:
+      hvd.broadcast_variables(model.variables, root_rank=0)
+      hvd.broadcast_variables(optimizer.variables, root_rank=0)
+  return loss, output
+  ```
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Deal with Data
+
+- At each training step, we want to ensure that **each worker receives unique data**
+- This can be done in one of two ways:
+    1. Manually partition data (ahead of time) and assign different sections to different workers
+        1. Each worker can only see their local portion of the data
+    2. From each worker, randomly select a mini-batch
+        1. Each worker can see the full dataset
+
+> [!Warning] Don't forget your seed!
+> When randomly selecting, it is important that each worker uses different seeds to ensure they receive unique data
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Deal with Data
+
+```python
+(images, labels), (xtest, ytest) = tf.keras.datasets.mnist.load_data(path='mnist.npz')
+dataset = tf.data.Dataset.from_tensor_slices(
+    (tf.cast(images[..., None] / 255.0, tf.float32),
+     tf.cast(labels, tf.int64))
+)
+test_dataset = tf.data.Dataset.from_tensor_slices(
+    (tf.cast(xtest[..., None] / 255.0, tf.float32),
+     tf.cast(ytest, tf.int64)))
+)
+nsamples = len(list(dataset))
+ntest = len(list(test_dataset))
+dataset = dataset.repeat().shuffle(1000).batch(args.batch_size)
+test_dataset = test_dataset.shard(num_shards=hvd.size(), index=hvd.rank()).repeat().batch(args.batch_size)
+
+```
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
+# Average Across Workers
+
+- Typically, we will want to take the global average of the loss across all our workers, for example:
+  ```python
+  global_loss = hvd.allreduce(loss, average=True)
+  global_acc = hvd.allreduce(acc, average=True)
   ```
 
 ---
@@ -376,7 +567,7 @@ flowchart TD
     --r-heading6-size: 1.025em;
     --r-heading-line-height:1.5em;
     --r-main-font-family: 'Inter';
-    --r-code-font: 'JuliaMono', 'Hack', 'VictorMono', "agave Nerd Font", monospace;
+    --r-code-font: 'JuliaMono', 'agave Nerd Font', 'Hack', 'VictorMono', "agave Nerd Font", monospace;
     --r-link-color: #03A9F4;
     --r-link-color-dark: #f92672;
     --r-link-color-hover: #63ff51;
@@ -420,7 +611,8 @@ flowchart TD
 	--cm-attribute-in-comment: #c792ea;
 	--cm-background-color: #1c1c1c;
 	--cm-active-line-background-color: #353a50;
-	--cm-foreground-color: #bdbdbd;
+	--cm-foreground-color: #AE81FF;
+	--code-normal: #AE81FF;
   -webkit-font-smoothing:subpixel-antialiased;
   --font-smoothing:subpixel-antialiased;
 	--chart-color-1: #ff00ff;
@@ -562,13 +754,43 @@ flowchart TD
 .callout {
   overflow: hidden;
   border-style: none;
-  border-color: rgba(var(--callout-color), var(--callout-border-opacity));
+  border-color: RGBA(var(--callout-color), var(--callout-border-opacity));
   border-width: var(--callout-border-width);
   border-radius: var(--callout-radius);
   margin: 1em 0;
   mix-blend-mode: var(--callout-blend-mode);
   background-color: rgba(var(--callout-color), 0.1);
   padding: var(--callout-padding);
+}
+.callout-title {
+  font-size: var(--callout-title-size);
+  color: RGB(var(--callout-color));
+  background-color: RGB(var(--callout-color), 0.0);
+  line-height: var(--line-height-tight);
+  font-weight: 700;
+}
+.callout-content {
+  overflow-x: auto;
+  padding: auto;
+  background-color: var(--callout-content-background);
+}
+.callout-icon {
+  flex: 0 0 auto;
+  padding: auto;
+  display: flex;
+  align-self: center;
+}
+.callout-icon .svg-icon {
+  color: RGB(var(--callout-color));
+}
+.callout-title-inner {
+  font-weight: var(--bold-weight);
+  color: var(--callout-title-color);
+}
+.callout-fold {
+  display: flex;
+  align-items: center;
+  padding-right: var(--size-4-2);
 }
 
 .reveal .code-wrapper code {
@@ -709,6 +931,26 @@ white-space: pre-wrap;
 
 .reveal sup {
 	font-size:0.6em;
+}
+
+.markdown-rendered code {
+  color: var(--code-normal)!important;
+  font-family: var(--font-monospace);
+}
+
+body.fallback-highlighting[class*="theme-"] .markdown-preview-view pre.cm-s-obsidian[class*="language-"], body.fallback-highlighting[class*="theme-"] .markdown-preview-view code[class*="language-"], body.fallback-highlighting[class*="theme-"] .markdown-preview-view .HyperMD-codeblock, body.fallback-highlighting[class*="theme-"] .markdown-preview-view .cm-hmd-codeblock {
+  --font-monospace: var(--cm-font-monospace);
+  color: var(--cm-foreground-color);
+  font-family: var(--cm-font-monospace);
+  font-weight: var(--cm-font-weight);
+  line-height: var(--cm-line-height);
+  font-size: var(--cm-font-size);
+  white-space: var(--cm-wrap-lines);
+}
+
+.reveal .code-wrapper code {
+  color: #bdbdbd;
+  font-family: 'JuliaMono', 'agave Nerd Font', monospace;
 }
 
 </style>
