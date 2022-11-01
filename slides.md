@@ -522,6 +522,26 @@ test_dataset = (
 
 <!-- .slide template="[[template]]" bg="#1c1c1c" -->
 
+# `ai4sci`
+
+```bash
+📁 07_largeScaleTraining/src/ai4sci/
+├── 📁 conf/
+│   └── ⚙️ config.yaml
+├── 📃 ilsvrc.json
+├── 📃 main.sh             # CLI script for training
+├── 🐍 __init__.py
+├── 🐍 ilsvrc_dataset.py
+├── 🐍 main.py       # main entry point
+├── 🐍 network.py    # define network architecture
+└── 🐍 trainer.py    # implement Trainer object
+```
+<!-- .element style="line-height:1.5em!important; font-family:monospace!important;" -->
+
+---
+
+<!-- .slide template="[[template]]" bg="#1c1c1c" -->
+
 # Hands-On
 
 1. Navigate to `ai-science-training-series`
@@ -589,7 +609,7 @@ test_dataset = (
     --r-heading6-size: 1.025em;
     --r-heading-line-height:1.5em;
     --r-main-font-family: 'Inter';
-    --r-code-font: 'JuliaMono', 'agave Nerd Font', 'Hack', 'VictorMono', "agave Nerd Font", monospace;
+    --r-code-font: "JuliaMono", "agave Nerd Font", "Hack", "VictorMono", monospace;
     --r-link-color: #03A9F4;
     --r-link-color-dark: #f92672;
     --r-link-color-hover: #63ff51;
