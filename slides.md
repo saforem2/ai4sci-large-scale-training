@@ -44,7 +44,7 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 # Why Distributed Training?
 
 - Large batches may not fit in GPU memory
-- Splitting data across workers --> larger batch size
+- Splitting data across workers $\longrightarrow$ larger batch size
 - Smooth loss landscape
 - Improved gradient estimators
 - Less iterations needed for same number of epochs
@@ -131,8 +131,8 @@ date created: Thursday, October 27th 2022, 4:08:11 pm
 
 $$y = w_0 * x_0 + w_1 * x_1 + w_2 * x_2$$
 
-1. Compute $y_{0} = w_{0} * x_{0}$ and send to --> `GPU1`
-2. Compute $y_{1} = y_{0} + w_{1} * x_{1}$ and send to --> `GPU2`
+1. Compute $y_{0} = w_{0} * x_{0}$ and send to $\longrightarrow$ `GPU1`
+2. Compute $y_{1} = y_{0} + w_{1} * x_{1}$ and send to $\longrightarrow$ `GPU2`
 3. Compute $y = y_{1} * w_{2} * x_{2}$ ✅
 
 
