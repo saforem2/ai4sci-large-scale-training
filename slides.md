@@ -266,7 +266,6 @@ flowchart TD
 
 # Data Parallel Training
 
-- Disjoint subsets of a neural network are assigned to different devices
 - Each worker receives:
     - **identical copy of model**
     - **unique subset of data**
